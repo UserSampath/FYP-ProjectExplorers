@@ -22,10 +22,10 @@ def get_requirements(file_path:str)->List[str]:
             return requirements
 
 setup(
-    name="FYP_Diabetic_Prediction_Recomandations",
+    name="FYP_Explorers",
     version='0.0.1',
-    author='Tech_Tonic',
-    author_email='ishaninfo56@gmail.com',
+    author='Explorers',
+    author_email='nalakasampathsmp@gmail.com',
     packages=find_packages(),
     install_requires=  get_requirements('requirements.txt')
 )
