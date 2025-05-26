@@ -11,4 +11,3 @@ torch
 CORS
 #-e .
 
-pip install xgboost
