@@ -5,9 +5,9 @@ matplotlib
 scikit-learn
 dill
 catboost
-Flask
+uvicorn
 sdv
 torch
-CORS
+fastapi
 #-e .
 
