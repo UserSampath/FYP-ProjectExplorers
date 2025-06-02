@@ -114,7 +114,8 @@ dfJobTitles['Job Title'] = dfJobTitles['Job Title'].str.lower().str.replace(patt
 dfJobTitles['Job Title'] = dfJobTitles['Job Title'].str.replace(r'\s+', ' ', regex=True).str.strip()
 job_keywords = dfJobTitles['Job Title'][dfJobTitles['Job Title'].str.strip() != ''].unique().tolist()
 
-dfQuestion = dfQuestion.applymap(lambda x: x.lower() if isinstance(x, str) else x)
+str_cols = dfQuestion.select_dtypes(include=['object']).columns
+dfQuestion[str_cols] = dfQuestion[str_cols].apply(lambda col: col.str.lower())
 def match_title(row):
     return any(any(k in str(row[col]) for k in job_keywords) for col in ['question', 'topic', 'tags'])
 dfQuestion['job_title_match'] = dfQuestion.apply(match_title, axis=1).astype(int)
@@ -125,7 +126,7 @@ def recommend_questions_job_title_only(user_id, n=10):
     return job_related.head(n)['question_id'].tolist()
 
 # Hybrid Recommendation
-def hybrid_recommendations(user_id, num_questions=10, alpha=0.35, beta=0.25, gamma=0.25, delta=0.15):
+def hybrid_recommendations(user_id, num_questions=5, alpha=0.35, beta=0.25, gamma=0.25, delta=0.15):
     collab = recommend_questions_collab(user_id, num_questions * 2)
     content = recommend_questions_content(user_id, num_questions * 2)
     bandit = recommender.recommend(user_id, top_n=num_questions * 2)['question_id'].tolist()

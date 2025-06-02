@@ -4,10 +4,10 @@ import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 
 # File paths
-question_path = "notebook/data/questionRecommandation/question­_dataset.csv"
-users_path = "notebook/data/questionRecommandation/user.csv"
-interaction_path = "notebook/data/questionRecommandation/intaraction_dataset.csv"
-job_titles_path = "notebook/data/questionRecommandation/jobTitles.csv"
+question_path = "notebook/data/questionRecommendation/question­_dataset.csv"
+users_path = "notebook/data/questionRecommendation/user.csv"
+interaction_path = "notebook/data/questionRecommendation/intaraction_dataset.csv"
+job_titles_path = "notebook/data/questionRecommendation/jobTitles.csv"
 
 # Load datasets
 dfQuestion = pd.read_csv(question_path)
@@ -33,7 +33,6 @@ dfInteractions = dfInteractions.merge(dfQuestion[['question_id', 'difficulty_enc
 
 
 ARTIFACT_DIR = "artifact/question_recommendation"
-
 
 # Save processed files
 dfQuestion.to_csv(f"{ARTIFACT_DIR}/processed_question.csv", index=False)

@@ -5,3 +5,5 @@ pip intall sdv
 python app.py    
 python src\components\Diabetic_Risk_Prediction\data_ingestion.py 
 pip install -r requirements.txt
+
+src\pipeline\Question_Recommendation\recammandQuestion.py

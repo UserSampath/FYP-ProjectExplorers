@@ -9,8 +9,8 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 
 from sklearn.preprocessing import StandardScaler
-from src.pipeline.Question_Recommendation.recammandQuestion import hybrid_recommendations
-
+from src.pipeline.Question_Recommendation.recommendQuestion import hybrid_recommendations
+# question
 # Define the request body model
 class RecommendationRequest(BaseModel):
     user_id: int
@@ -32,7 +32,7 @@ app.add_middleware(
 def index():
     return {"message": "API is working"}
 
-@app.post("/questionrecommendation")
+@app.post("/generateQuestions")
 def question_recommendation(req: RecommendationRequest):
     try:
         print("Received data for question recommendation:", req)
