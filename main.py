@@ -10,6 +10,10 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 
 from sklearn.preprocessing import StandardScaler
 from src.pipeline.Question_Recommendation.recommendQuestion import hybrid_recommendations
+from src.schemas.schemas import AnswerQuestionRequest
+from src.controllers.question_controller import answer_question
+
+
 # question
 # Define the request body model
 class RecommendationRequest(BaseModel):
@@ -54,4 +58,28 @@ def question_recommendation(req: RecommendationRequest):
 
     except Exception as e:
         print("Error during question recommendation:", e)
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+    
+@app.post("/answerQuestion")
+def save_answer(req: AnswerQuestionRequest):
+    try:
+        print("Saving answer:", req)
+
+        result = answer_question(
+            question_id=req.question_id,
+            user_id=req.user_id,
+            answered_correctly=req.answered_correctly,
+            time_taken=req.time_taken,
+            difficulty_encoded=req.difficulty_encoded
+        )
+
+        if result["status"] == "error":
+            raise HTTPException(status_code=500, detail=result["message"])
+
+        return result
+
+    except Exception as e:
+        print("Error in /answerQuestion:", e)
         raise HTTPException(status_code=500, detail=str(e))

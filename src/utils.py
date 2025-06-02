@@ -6,7 +6,7 @@ import dill
 from src.exception import CustomException
 from sklearn.metrics import r2_score
 from sklearn.model_selection import GridSearchCV
-
+from sqlalchemy import create_engine
 
 def save_obj(file_path, obj):
     try:
@@ -58,3 +58,17 @@ def load_object(file_path):
 
     except Exception as e:
         raise CustomException(e, sys)
+    
+
+
+
+def get_engine():
+    user = 'root'
+    password = '205011D'
+    host = 'localhost'
+    port = '3306'
+    database = 'exploresDb'
+    
+    engine = create_engine(f'mysql+mysqlconnector://{user}:{password}@{host}:{port}/{database}')
+    return engine
+

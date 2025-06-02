@@ -9,5 +9,8 @@ uvicorn
 sdv
 torch
 fastapi
+mysql-connector-python
+sqlalchemy
+pydantic
 #-e .
 

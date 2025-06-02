@@ -8,16 +8,25 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import TruncatedSVD
 from sklearn.metrics.pairwise import cosine_similarity
 import re
+from src.utils import get_engine
 
-# Load preprocessed data
-dfQuestion = pd.read_csv("artifact/question_recommendation/processed_question.csv")
-dfUsers = pd.read_csv("artifact/question_recommendation/processed_users.csv")
-dfInteractions = pd.read_csv("artifact/question_recommendation/processed_interactions.csv")
-dfJobTitles = pd.read_csv("artifact/question_recommendation/cleaned_job_titles.csv")
+
+engine = get_engine()
+
+dfQuestion = pd.read_sql("SELECT * FROM processed_question", engine)
+dfUsers = pd.read_sql("SELECT * FROM processed_users", engine)
+dfInteractions = pd.read_sql("SELECT * FROM processed_interactions", engine)
+dfJobTitles = pd.read_sql("SELECT * FROM cleaned_job_titles", engine)
+
+# # Load preprocessed data
+# dfQuestion = pd.read_csv("artifact/question_recommendation/processed_question.csv")
+# dfUsers = pd.read_csv("artifact/question_recommendation/processed_users.csv")
+# dfInteractions = pd.read_csv("artifact/question_recommendation/processed_interactions.csv")
+# dfJobTitles = pd.read_csv("artifact/question_recommendation/cleaned_job_titles.csv")
 
 # Collaborative Filtering (KNN + SVD)
 dfInteractions['weighted_score'] = (
-    dfInteractions['answerd_correctly'] + dfInteractions['timeTaken_minmax'] + dfInteractions['difficulty_encoded']
+    dfInteractions['answered_correctly'] + dfInteractions['timeTaken_minmax'] + dfInteractions['difficulty_encoded']
 ) / 3
 
 interaction_matrix = dfInteractions.pivot(index='user_id', columns='question_id', values='weighted_score').fillna(0)
@@ -73,7 +82,7 @@ class QuestionBanditRecommender:
         for _, row in dfInteractions.iterrows():
             qid = row['question_id']
             self.attempts[qid] += 1
-            if row['answerd_correctly'] == 1:
+            if row['answered_correctly'] == 1:
                 t = row['time_taken']
                 self.successes[qid] += 1 if t <= 30 else 0.8 if t <= 60 else 0.5
 

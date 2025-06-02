@@ -1,4 +1,4 @@
-﻿question_id,user_id,answerd_correctly,time_taken
+﻿question_id,user_id,answered_correctly,time_taken
 1,1,Yes,10
 2,2,Yes,9
 3,3,Yes,11
