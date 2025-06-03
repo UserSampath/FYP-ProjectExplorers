@@ -7,6 +7,11 @@ from src.exception import CustomException
 from sklearn.metrics import r2_score
 from sklearn.model_selection import GridSearchCV
 from sqlalchemy import create_engine
+import requests
+
+
+
+
 
 def save_obj(file_path, obj):
     try:
@@ -72,3 +77,64 @@ def get_engine():
     engine = create_engine(f'mysql+mysqlconnector://{user}:{password}@{host}:{port}/{database}')
     return engine
 
+
+from sqlalchemy import create_engine, text  # Add `text` here
+
+
+
+from sqlalchemy import  inspect, Table, Column, Integer, String, MetaData
+
+
+def fetch_and_save_job_titles(source_type="indeed"):
+    try:
+        if source_type == "indeed":
+          
+
+            url = "https://indeed12.p.rapidapi.com/jobs/search"
+            querystring = {"query": "software engineer", "sort": "date", "page_id": "1"}
+            headers = {
+            "X-RapidAPI-Key": "7c77fce846msh2aa9f4dafcc20c4p12d557jsn763e51b0b26b",
+            "X-RapidAPI-Host": "indeed12.p.rapidapi.com"
+        }
+            response = requests.get(url, headers=headers, params=querystring)
+
+            response.raise_for_status()
+            data = response.json()
+            job_titles = [{"title": job["title"]} for job in data.get("hits", [])]
+
+        elif source_type == "linkedin":
+            url = "https://linkedin-data-scraper-api1.p.rapidapi.com/jobs/search"
+            querystring = {"keywords": "Software engineer", "sort": "recent"}
+            headers = {
+                "X-RapidAPI-Key": "7c77fce846msh2aa9f4dafcc20c4p12d557jsn763e51b0b26b",
+                "X-RapidAPI-Host": "linkedin-data-scraper-api1.p.rapidapi.com"
+            }
+
+            response = requests.get(url, headers=headers, params=querystring)
+            response.raise_for_status()
+            data = response.json()
+            job_list = data.get("data", {}).get("jobs", [])
+            job_titles = [{"title": job["job_title"]} for job in job_list]
+
+        else:
+            print("❌ Unknown source_type. Use 'indeed' or 'linkedin'.")
+            return
+
+        if not job_titles:
+            print("No job titles found in API response.")
+            return
+
+        # Convert to DataFrame
+        df = pd.DataFrame(job_titles)
+
+        # Ensure the column is named 'title'
+        df.columns = ['title']
+
+        # Append to DB
+        engine = get_engine()
+        df.to_sql(name='cleaned_job_titles', con=engine, if_exists='append', index=False)
+
+        print(f"✅ Successfully inserted {len(df)} job titles from {source_type}.")
+
+    except Exception as e:
+        print(f"❌ Error fetching data from {source_type} API: {e}")

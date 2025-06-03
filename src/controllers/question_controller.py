@@ -7,8 +7,7 @@ from src.utils import get_engine
 def answer_question(question_id: int, user_id: int, answered_correctly: bool,
                     time_taken: float, difficulty_encoded: float):
     try:
-        # Compute timeTaken_minmax - Optionally use global MinMax, bucket logic, or fixed scaling
-        # For now, here's an example using fixed scaling
+
         max_time = 30  # e.g., 2 minutes
         min_time = 3   # e.g., 1 second
         timeTaken_minmax = (time_taken - min_time) / (max_time - min_time)

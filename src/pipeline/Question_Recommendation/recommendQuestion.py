@@ -119,9 +119,9 @@ recommender = QuestionBanditRecommender(dfQuestion, dfUsers, dfInteractions)
 # Job Title Matching
 unwanted = ["se", "software engineer", "associate", "full stack", "fullstack", "developer", "designer", "engineer"]
 pattern = r'\b(?:' + '|'.join(map(re.escape, unwanted)) + r')\b'
-dfJobTitles['Job Title'] = dfJobTitles['Job Title'].str.lower().str.replace(pattern, '', regex=True)
-dfJobTitles['Job Title'] = dfJobTitles['Job Title'].str.replace(r'\s+', ' ', regex=True).str.strip()
-job_keywords = dfJobTitles['Job Title'][dfJobTitles['Job Title'].str.strip() != ''].unique().tolist()
+dfJobTitles['title'] = dfJobTitles['title'].str.lower().str.replace(pattern, '', regex=True)
+dfJobTitles['title'] = dfJobTitles['title'].str.replace(r'\s+', ' ', regex=True).str.strip()
+job_keywords = dfJobTitles['title'][dfJobTitles['title'].str.strip() != ''].unique().tolist()
 
 str_cols = dfQuestion.select_dtypes(include=['object']).columns
 dfQuestion[str_cols] = dfQuestion[str_cols].apply(lambda col: col.str.lower())

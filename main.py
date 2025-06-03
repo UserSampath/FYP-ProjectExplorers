@@ -12,6 +12,7 @@ from sklearn.preprocessing import StandardScaler
 from src.pipeline.Question_Recommendation.recommendQuestion import hybrid_recommendations
 from src.schemas.schemas import AnswerQuestionRequest
 from src.controllers.question_controller import answer_question
+from src.utils import fetch_and_save_job_titles
 
 
 # question
@@ -61,7 +62,7 @@ def question_recommendation(req: RecommendationRequest):
         raise HTTPException(status_code=500, detail=str(e))
     
 
-    
+
 @app.post("/answerQuestion")
 def save_answer(req: AnswerQuestionRequest):
     try:
@@ -83,3 +84,25 @@ def save_answer(req: AnswerQuestionRequest):
     except Exception as e:
         print("Error in /answerQuestion:", e)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# Request model
+class SourceTypeRequest(BaseModel):
+    source_type: str
+
+
+@app.post("/fetchJobTitles")
+def fetch_job_titles(request: SourceTypeRequest):
+    try:
+        print(f"🔄 Fetching and saving job titles from API... Source Type: {request.source_type}")
+
+        # Pass the source_type to your function if needed
+        fetch_and_save_job_titles(request.source_type)
+
+        return {"status": "success", "message": "Job titles fetched and saved successfully."}
+
+    except Exception as e:
+        print("❌ Error in /fetchJobTitles:", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
