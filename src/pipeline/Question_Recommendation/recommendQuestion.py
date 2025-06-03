@@ -16,7 +16,8 @@ engine = get_engine()
 dfQuestion = pd.read_sql("SELECT * FROM processed_question", engine)
 dfUsers = pd.read_sql("SELECT * FROM processed_users", engine)
 dfInteractions = pd.read_sql("SELECT * FROM processed_interactions", engine)
-dfJobTitles = pd.read_sql("SELECT * FROM cleaned_job_titles", engine)
+dfJobTitles = pd.read_sql("SELECT * FROM cleaned_job_titles ORDER BY id DESC LIMIT 150", engine)
+
 
 # # Load preprocessed data
 # dfQuestion = pd.read_csv("artifact/question_recommendation/processed_question.csv")
