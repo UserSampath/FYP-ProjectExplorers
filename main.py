@@ -14,7 +14,6 @@ from src.schemas.schemas import AnswerQuestionRequest
 from src.controllers.question_controller import answer_question
 from src.utils import fetch_and_save_job_titles
 
-
 # question
 # Define the request body model
 class RecommendationRequest(BaseModel):
