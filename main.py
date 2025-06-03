@@ -10,6 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 
 from sklearn.preprocessing import StandardScaler
 from src.pipeline.Question_Recommendation.recommendQuestion import hybrid_recommendations
+from src.pipeline.languageProficiency.languageProficiency import predict_score
 from src.schemas.schemas import AnswerQuestionRequest
 from src.controllers.question_controller import answer_question
 from src.utils import fetch_and_save_job_titles
@@ -93,7 +94,7 @@ class SourceTypeRequest(BaseModel):
 @app.post("/fetchJobTitles")
 def fetch_job_titles(request: SourceTypeRequest):
     try:
-        print(f"🔄 Fetching and saving job titles from API... Source Type: {request.source_type}")
+        print(f" Fetching and saving job titles from API... Source Type: {request.source_type}")
 
         # Pass the source_type to your function if needed
         fetch_and_save_job_titles(request.source_type)
@@ -101,7 +102,21 @@ def fetch_job_titles(request: SourceTypeRequest):
         return {"status": "success", "message": "Job titles fetched and saved successfully."}
 
     except Exception as e:
-        print("❌ Error in /fetchJobTitles:", e)
+        print("Error in /fetchJobTitles:", e)
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# Request schema for prediction
+class TextRequest(BaseModel):
+    text: str
+
+@app.post("/predictLanguageScore")
+def predict_language_score(request: TextRequest):
+    try:
+        score = predict_score(request.text)
+
+        return {"status": "success", "predicted_score": round(score, 2)*2}
+
+    except Exception as e:
+        print("❌ Error in /predictLanguageScore:", e)
+        raise HTTPException(status_code=500, detail=str(e))

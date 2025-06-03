@@ -12,5 +12,6 @@ fastapi
 mysql-connector-python
 sqlalchemy
 pydantic
+transformers
 #-e .
 
