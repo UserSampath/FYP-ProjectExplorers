@@ -5,12 +5,11 @@ import numpy as np
 import pandas as pd
 import sys
 import os
-
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 
 from sklearn.preprocessing import StandardScaler
 from src.pipeline.Question_Recommendation.recommendQuestion import hybrid_recommendations
-from src.pipeline.languageProficiency.languageProficiency import predict_score
+from src.pipeline.languageProficiency.languageProficiency import predict_all_scores
 from src.schemas.schemas import AnswerQuestionRequest
 from src.controllers.question_controller import answer_question
 from src.utils import fetch_and_save_job_titles
@@ -113,10 +112,10 @@ class TextRequest(BaseModel):
 @app.post("/predictLanguageScore")
 def predict_language_score(request: TextRequest):
     try:
-        score = predict_score(request.text)
+        scores = predict_all_scores(request.text)
 
-        return {"status": "success", "predicted_score": round(score, 2)*2}
+        return {"status": "success", "predicted_score": scores}
 
     except Exception as e:
-        print("❌ Error in /predictLanguageScore:", e)
+        print("Error in /predictLanguageScore:", e)
         raise HTTPException(status_code=500, detail=str(e))

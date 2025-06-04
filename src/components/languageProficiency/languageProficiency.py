@@ -23,14 +23,14 @@ class RegressionDataset(Dataset):
         return len(self.targets)
 
 def train_language_model(csv_path: str, model_save_path: str):
-    df = pd.read_csv(csv_path)[["full_text", "Overall"]].dropna().reset_index(drop=True)
+    df = pd.read_csv(csv_path)[["full_text", "Grammar"]].dropna().reset_index(drop=True)
 
     tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
     model = BertForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=1)
 
     train_texts, val_texts, train_scores, val_scores = train_test_split(
         df["full_text"].tolist(),
-        df["Overall"].tolist(),
+        df["Grammar"].tolist(),
         test_size=0.2,
         random_state=42
     )
@@ -78,8 +78,8 @@ def train_language_model(csv_path: str, model_save_path: str):
 
     # Save model and tokenizer
     os.makedirs(model_save_path, exist_ok=True)
-    model.save_pretrained(os.path.join(model_save_path, "model"))
-    tokenizer.save_pretrained(os.path.join(model_save_path, "tokenizer"))
+    model.save_pretrained(os.path.join(model_save_path, "grammarModel"))
+    tokenizer.save_pretrained(os.path.join(model_save_path, "grammarTokenizer"))
     print(f"\n✅ Model saved to: {model_save_path}")
 
 
