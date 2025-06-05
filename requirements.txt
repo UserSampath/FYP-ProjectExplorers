@@ -13,5 +13,8 @@ mysql-connector-python
 sqlalchemy
 pydantic
 transformers
+librosa
+soundfile
+matplotlib
 #-e .
 
