@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
-from src.pipeline.Question_Recommendation.recommendQuestion import hybrid_recommendations
+from src.pipeline.questionRecommendation.recommendQuestion import hybrid_recommendations
 from src.schemas.schemas import AnswerQuestionRequest
-from src.controllers.question_controller import answer_question
+from src.controllers.questionController import answer_question
 from pydantic import BaseModel
 
 router = APIRouter()
