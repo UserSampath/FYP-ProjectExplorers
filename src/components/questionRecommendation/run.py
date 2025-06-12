@@ -2,8 +2,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
-from sqlalchemy import Table, Column, Integer, String, MetaData
-
+from sqlalchemy import Table, Column, Integer, String, Boolean, MetaData
 from src.utils import get_engine
 # File paths
 question_path = "notebook/data/questionRecommendation/question­_dataset.csv"
@@ -36,6 +35,41 @@ engine = get_engine()
 
 metadata = MetaData()
 
+processed_users_table = Table(
+    'processed_users',
+    metadata,
+    Column('user_id', String(255), primary_key=True),  # Keep existing user_id
+    Column('expertise_level', String(255)),
+    Column('years_of_experience', Integer),
+    Column('familiar_technologies', String(255)),
+    Column('password', String(255)),
+    Column('firstName', String(255)),
+    Column('email', String(255)),
+    Column('lastName', String(255)),
+    Column('otp', String(10)),
+    Column('train', Boolean)
+)
+
+# Drop and recreate the table
+metadata.drop_all(engine, [processed_users_table])
+metadata.create_all(engine)
+
+# Add new columns to dfUsers
+dfUsers['password'] = ''
+dfUsers['firstName'] = ''
+dfUsers['lastName'] = ''
+dfUsers['email'] = ''
+dfUsers['otp'] = ''
+dfUsers['train'] = True
+
+
+# Ensure types are appropriate
+dfUsers['user_id'] = dfUsers['user_id'].astype(int)
+dfUsers['years_of_experience'] = dfUsers['years_of_experience'].fillna(0).astype(int)
+dfUsers['train'] = dfUsers['train'].astype(bool)
+
+
+
 # Create cleaned_job_titles table with auto-increment ID
 job_titles_table = Table(
     'cleaned_job_titles',
@@ -56,7 +90,7 @@ dfJobTitles.to_sql(name='cleaned_job_titles', con=engine, if_exists='append', in
 
  #Save processed files in db
 dfQuestion.to_sql(name='processed_question', con=engine, if_exists='replace', index=False)
-dfUsers.to_sql(name='processed_users', con=engine, if_exists='replace', index=False)
+dfUsers.to_sql(name='processed_users', con=engine, if_exists='append', index=False)
 dfInteractions.to_sql(name='processed_interactions', con=engine, if_exists='replace', index=False)
 # dfJobTitles.to_sql(name='cleaned_job_titles', con=engine, if_exists='replace', index=False) 
 

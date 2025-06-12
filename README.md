@@ -21,8 +21,9 @@ python app.py
 python src\components\Diabetic_Risk_Prediction\data_ingestion.py 
 
 uvicorn main:app --reload
-python -m src.components.Question_Recommendation.run 
+python -m src.components.questionRecommendation.run
 python src\components\languageProficiency\languageProficiency.py 
+python -m src\components\questionRecommendation\run.py
 
 
 git clone https://github.com/tyiannak/pyAudioAnalysis.git
