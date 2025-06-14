@@ -1,5 +1,7 @@
 from fastapi import Depends, HTTPException, Security
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from src.exception import raise_custom_error
+
 from jose import jwt, JWTError
 import os
 
@@ -14,7 +16,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Security(securi
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         user_id = payload.get("sub")
         if user_id is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
+            raise_custom_error(401, "You are not authorized")
         return user_id
     except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
+        raise_custom_error(401, "You are not authorized")

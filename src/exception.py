@@ -1,5 +1,16 @@
 import sys
 
+from fastapi import HTTPException
+
+def raise_custom_error(status_code: int, message: str):
+    raise HTTPException(
+        status_code=status_code,
+        detail={
+            "status": "error",
+            "success": False,
+            "message": message
+        }
+    )
 
 def error_message_detail(error, error_detail: sys):
     _, _, exc_tb = error_detail.exc_info()

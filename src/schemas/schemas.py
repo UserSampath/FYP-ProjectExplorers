@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional,Any
 
 class AnswerQuestionRequest(BaseModel):
     question_id: int
@@ -24,3 +24,10 @@ class UpdateUserRequest(BaseModel):
     lastName: Optional[str] = None
     email: Optional[str] = None
     password: Optional[str] = None
+
+
+class APIResponse(BaseModel):
+    status: str 
+    success: bool
+    message: Optional[str]
+    data: Optional[Any] 

@@ -190,3 +190,46 @@ def userUpdate(user_id: str, **fields):
             "status": "error",
             "message": str(e)
         }
+    
+
+def getUserDetails(user_id: str):
+    try:
+        engine = get_engine()
+        metadata = MetaData()
+        metadata.reflect(bind=engine)
+        users_table = metadata.tables.get("processed_users")
+
+        if users_table is None:
+            return {
+                "status": "error",
+                "message": "User table does not exist"
+            }
+
+        with engine.connect() as conn:
+            # Query the user by user_id
+            select_stmt = select(users_table).where(users_table.c.user_id == user_id)
+            user_row = conn.execute(select_stmt).mappings().first()
+
+            if user_row is None:
+                return {
+                    "status": "error",
+                    "message": "User not found"
+                }
+
+            user = dict(user_row)
+            user.pop("password", None)
+            user.pop("user_id", None)  # Remove password field for security
+              # Remove password field for security
+
+            return {
+                "status": "success",
+                "message": "User fetched successfully",
+                "user": user
+            }
+
+    except Exception as e:
+        print("Error in Get user:", e)
+        return {
+            "status": "error",
+            "message": str(e)
+        }

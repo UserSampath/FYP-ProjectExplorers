@@ -46,7 +46,6 @@ processed_users_table = Table(
     Column('firstName', String(255)),
     Column('email', String(255)),
     Column('lastName', String(255)),
-    Column('otp', String(10)),
     Column('train', Boolean)
 )
 
@@ -59,7 +58,6 @@ dfUsers['password'] = ''
 dfUsers['firstName'] = ''
 dfUsers['lastName'] = ''
 dfUsers['email'] = ''
-dfUsers['otp'] = ''
 dfUsers['train'] = True
 
 
