@@ -9,8 +9,7 @@ router = APIRouter()
 def register_user(req: RegisterRequest):
     try:
         result = userRegister(
-            firstName=req.firstName,
-            lastName=req.lastName,
+            fullName=req.fullName,
             email=req.email,
             password=req.password
         )
@@ -21,7 +20,7 @@ def register_user(req: RegisterRequest):
             "status": "success",
             "success": True,
             "message": result["message"],
-            "data": {"token": result["token"]}
+            "data": {"token": result["token"],"user": result["user"]}
             
         }
     except HTTPException as he:

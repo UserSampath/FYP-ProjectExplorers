@@ -43,9 +43,8 @@ processed_users_table = Table(
     Column('years_of_experience', Integer),
     Column('familiar_technologies', String(255)),
     Column('password', String(255)),
-    Column('firstName', String(255)),
+    Column('fullName', String(255)),
     Column('email', String(255)),
-    Column('lastName', String(255)),
     Column('train', Boolean)
 )
 
@@ -55,8 +54,7 @@ metadata.create_all(engine)
 
 # Add new columns to dfUsers
 dfUsers['password'] = ''
-dfUsers['firstName'] = ''
-dfUsers['lastName'] = ''
+dfUsers['fullName'] = ''
 dfUsers['email'] = ''
 dfUsers['train'] = True
 

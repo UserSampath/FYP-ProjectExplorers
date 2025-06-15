@@ -14,7 +14,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Security(securi
     token = credentials.credentials
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        user_id = payload.get("sub")
+        user_id = payload.get("userId")
         if user_id is None:
             raise_custom_error(401, "You are not authorized")
         return user_id

@@ -19,14 +19,14 @@ def hash_password(password: str) -> str:
 
 def generate_jwt_token(user_data: dict) -> str:
     payload = {
-        "sub": user_data["user_id"],  # UUID used as subject
         "exp": datetime.utcnow() + timedelta(hours=1),
-        "firstName": user_data["firstName"],
-        "lastName": user_data["lastName"]
+        "userId": user_data["user_id"],  # UUID used as subject
+        "fullName": user_data["fullName"]
+        
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
-def userRegister(firstName: str, lastName: str, email: str, password: str):
+def userRegister(fullName: str, email: str, password: str):
     try:
         engine = get_engine()
         metadata = MetaData()
@@ -38,7 +38,7 @@ def userRegister(firstName: str, lastName: str, email: str, password: str):
 
         with engine.connect() as conn:
             # Check if email already exists
-            select_stmt = users_table.select().where(users_table.c.email == email)
+            select_stmt = select(users_table).where(users_table.c.email == email)
             result = conn.execute(select_stmt).first()
             if result is not None:
                 return {
@@ -52,8 +52,7 @@ def userRegister(firstName: str, lastName: str, email: str, password: str):
 
             insert_stmt = insert(users_table).values(
                 user_id=user_id,
-                firstName=firstName,
-                lastName=lastName,
+                fullName=fullName,
                 email=email,
                 password=hashed_password,
                 train=False
@@ -61,16 +60,30 @@ def userRegister(firstName: str, lastName: str, email: str, password: str):
             conn.execute(insert_stmt)
             conn.commit()
 
+            # Fetch the inserted user
+            new_user_stmt = select(users_table).where(users_table.c.user_id == user_id)
+            new_user = conn.execute(new_user_stmt).first()
+
             token = generate_jwt_token({
                 "user_id": user_id,
-                "firstName": firstName,
-                "lastName": lastName
+                "fullName": fullName,
             })
+
+            # Convert row to dictionary and select only specific fields
+            user_data = dict(new_user._mapping) if new_user else {}
+            filtered_user = {
+                "fullName": user_data.get("fullName"),
+                "email": user_data.get("email"),
+                "expertise_level": user_data.get("expertise_level"),
+                "years_of_experience": user_data.get("years_of_experience"),
+                "familiar_technologies": user_data.get("familiar_technologies"),
+            }
 
         return {
             "status": "success",
             "message": "User registered successfully",
-            "token": token
+            "token": token,
+            "user": filtered_user
         }
 
     except Exception as e:
@@ -79,9 +92,6 @@ def userRegister(firstName: str, lastName: str, email: str, password: str):
             "status": "error",
             "message": str(e)
         }
-
-   
-
 
 def userLogin(email: str, password: str):
     try:
@@ -110,17 +120,22 @@ def userLogin(email: str, password: str):
                     "status": "error",
                     "message": "Invalid email or password"
                 }
-
-            # Convert to dict and remove password
+            
             user_data = dict(user_row)
-            user_data.pop('password', None)  # Remove password safely
-
             # Generate JWT token
             token = generate_jwt_token({
                 "user_id": user_data['user_id'],
-                "firstName": user_data['firstName'],
-                "lastName": user_data['lastName']
+                "fullName": user_data['fullName'],
             })
+
+            # Convert to dict and remove password
+           
+            user_data.pop('password', None)
+            user_data.pop('user_id', None) 
+            user_data.pop('train', None)  
+      
+
+            
 
             return {
                 "status": "success",
@@ -217,14 +232,18 @@ def getUserDetails(user_id: str):
                 }
 
             user = dict(user_row)
-            user.pop("password", None)
-            user.pop("user_id", None)  # Remove password field for security
-              # Remove password field for security
+            filtered_user = {
+                "fullName": user.get("fullName"),
+                "email": user.get("email"),
+                "expertise_level":user.get("expertise_level"),
+                "years_of_experience":user.get("years_of_experience"),
+                "familiar_technologies":user.get("familiar_technologies"),
+            }
 
             return {
                 "status": "success",
                 "message": "User fetched successfully",
-                "user": user
+                "user": filtered_user
             }
 
     except Exception as e:

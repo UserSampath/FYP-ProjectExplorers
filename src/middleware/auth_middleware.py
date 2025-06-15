@@ -17,7 +17,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
         try:
             payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-            user_id = payload.get("sub")  # Assuming 'sub' stores user_id
+            user_id = payload.get("userId")  # Assuming 'sub' stores user_id
             if user_id is None:
                 raise HTTPException(status_code=401, detail="Invalid token: user_id missing")
 

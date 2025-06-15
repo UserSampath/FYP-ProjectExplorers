@@ -9,8 +9,7 @@ class AnswerQuestionRequest(BaseModel):
     difficulty_encoded: int
 
 class RegisterRequest(BaseModel):
-    firstName: str
-    lastName: str
+    fullName:str
     email: str
     password: str
 
@@ -20,14 +19,15 @@ class LoginRequest(BaseModel):
     password: str
 
 class UpdateUserRequest(BaseModel):
-    firstName: Optional[str] = None
-    lastName: Optional[str] = None
+    fullName: Optional[str] = None
     email: Optional[str] = None
-    password: Optional[str] = None
+    familiar_technologies: Optional[str] = None
+    years_of_experience: Optional[int] = None
+    expertise_level: Optional[str] = None
 
 
 class APIResponse(BaseModel):
     status: str 
     success: bool
-    message: Optional[str]
-    data: Optional[Any] 
+    message: str
+    data: Any 
