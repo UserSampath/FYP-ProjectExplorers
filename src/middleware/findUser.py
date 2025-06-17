@@ -5,6 +5,9 @@ from src.exception import raise_custom_error
 from jose import jwt, JWTError
 import os
 
+from dotenv import load_dotenv
+load_dotenv()
+
 JWT_SECRET = os.getenv("JWT_SECRET")
 JWT_ALGORITHM = "HS256"
 

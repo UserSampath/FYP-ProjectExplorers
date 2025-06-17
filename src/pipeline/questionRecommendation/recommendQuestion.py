@@ -30,7 +30,9 @@ dfInteractions['weighted_score'] = (
     dfInteractions['answered_correctly'] + dfInteractions['timeTaken_minmax'] + dfInteractions['difficulty_encoded']
 ) / 3
 
-interaction_matrix = dfInteractions.pivot(index='user_id', columns='question_id', values='weighted_score').fillna(0)
+interaction_matrix = dfInteractions.copy()
+interaction_matrix['user_id'] = interaction_matrix['user_id'].astype(str)
+interaction_matrix = interaction_matrix.pivot(index='user_id', columns='question_id', values='weighted_score').fillna(0)
 interaction_np = interaction_matrix.values
 
 knn = NearestNeighbors(metric='cosine', algorithm='brute')
@@ -69,7 +71,7 @@ def recommend_questions_content(user_id, n=5):
     user_vec = vectorizer.transform([prefs])
     scores = cosine_similarity(user_vec, tfidf_matrix).flatten()
     top_idx = scores.argsort()[::-1]
-    recs = [dfQuestion.iloc[i]['question_id'] for i in top_idx if dfQuestion.iloc[i]['question_id'] not in answered]
+    recs = [int(dfQuestion.iloc[i]['question_id']) for i in top_idx if dfQuestion.iloc[i]['question_id'] not in answered]
     return recs[:n]
 
 # Reinforcement Learning (Bandit)
@@ -94,7 +96,8 @@ class QuestionBanditRecommender:
     def recommend(self, user_id, top_n=5):
         user = self.udf[self.udf['user_id'] == user_id]
         if user.empty:
-            return pd.DataFrame()
+            print("No user")
+            return pd.DataFrame(columns=['question_id']) 
         user = user.iloc[0]
         user_techs = [t.strip().lower() for t in str(user['familiar_technologies']).split(',')]
         level = str(user['expertise_level']).lower()
@@ -152,9 +155,9 @@ def hybrid_recommendations(user_id, num_questions=5, alpha=0.35, beta=0.25, gamm
     return dfQuestion[dfQuestion['question_id'].isin(top_qids)]
 
 # Test
-# user_id = 2
-# print("CF:", recommend_questions_collab(user_id))
-# print("CBF:", recommend_questions_content(user_id))
-# print("Bandit:", recommender.recommend(user_id)['question_id'].tolist())
-# print("Job Title:", recommend_questions_job_title_only(user_id))
-# print("Hybrid:", hybrid_recommendations(user_id)['question_id'].tolist())
+user_id = "3"
+print("CF:", recommend_questions_collab(user_id))
+print("CBF:", recommend_questions_content(user_id))
+print("Bandit:", recommender.recommend(user_id)['question_id'].tolist())
+print("Job Title:", recommend_questions_job_title_only(user_id))
+print("Hybrid:", hybrid_recommendations(user_id)['question_id'].tolist())
