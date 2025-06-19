@@ -18,13 +18,6 @@ dfUsers = pd.read_sql("SELECT * FROM processed_users", engine)
 dfInteractions = pd.read_sql("SELECT * FROM processed_interactions", engine)
 dfJobTitles = pd.read_sql("SELECT * FROM cleaned_job_titles ORDER BY id DESC LIMIT 200", engine)
 
-
-# # Load preprocessed data
-# dfQuestion = pd.read_csv("artifact/question_recommendation/processed_question.csv")
-# dfUsers = pd.read_csv("artifact/question_recommendation/processed_users.csv")
-# dfInteractions = pd.read_csv("artifact/question_recommendation/processed_interactions.csv")
-# dfJobTitles = pd.read_csv("artifact/question_recommendation/cleaned_job_titles.csv")
-
 # Collaborative Filtering (KNN + SVD)
 dfInteractions['weighted_score'] = (
     dfInteractions['answered_correctly'] + dfInteractions['timeTaken_minmax'] + dfInteractions['difficulty_encoded']
@@ -32,7 +25,13 @@ dfInteractions['weighted_score'] = (
 
 interaction_matrix = dfInteractions.copy()
 interaction_matrix['user_id'] = interaction_matrix['user_id'].astype(str)
-interaction_matrix = interaction_matrix.pivot(index='user_id', columns='question_id', values='weighted_score').fillna(0)
+# interaction_matrix = interaction_matrix.pivot(index='user_id', columns='question_id', values='weighted_score').fillna(0)
+interaction_matrix = interaction_matrix.pivot_table(
+    index='user_id', 
+    columns='question_id', 
+    values='weighted_score', 
+    aggfunc='mean'  # or 'max', 'min', etc., based on your logic
+).fillna(0)
 interaction_np = interaction_matrix.values
 
 knn = NearestNeighbors(metric='cosine', algorithm='brute')
@@ -50,6 +49,8 @@ def recommend_questions_collab(user_id, n=5):
     if user_id not in predicted_df.index:
         return []
     answered = get_answered_questions(user_id)
+    print("🚀 ~ answered:", answered)
+    
     ranked = predicted_df.loc[user_id].sort_values(ascending=False)
     return [qid for qid in ranked.index if qid not in answered][:n]
 
@@ -101,7 +102,8 @@ class QuestionBanditRecommender:
         user = user.iloc[0]
         user_techs = [t.strip().lower() for t in str(user['familiar_technologies']).split(',')]
         level = str(user['expertise_level']).lower()
-        answered = set(self.idf[self.idf['user_id'] == user_id]['question_id'])
+        answered = set(map(int, dfInteractions[dfInteractions['user_id'] == user_id]['question_id'].tolist()))
+
         candidates = self.qdf[~self.qdf['question_id'].isin(answered)]
         total_attempts = sum(self.attempts.values())
         scored = []
@@ -143,19 +145,26 @@ def hybrid_recommendations(user_id, num_questions=5, alpha=0.35, beta=0.25, gamm
     collab = recommend_questions_collab(user_id, num_questions * 2)
     content = recommend_questions_content(user_id, num_questions * 2)
     bandit = recommender.recommend(user_id, top_n=num_questions * 2)['question_id'].tolist()
+    
     score_dict = {}
     for i, qid in enumerate(collab): score_dict[qid] = score_dict.get(qid, 0) + alpha * (1 / (i + 1))
     for i, qid in enumerate(content): score_dict[qid] = score_dict.get(qid, 0) + beta * (1 / (i + 1))
     for i, qid in enumerate(bandit): score_dict[qid] = score_dict.get(qid, 0) + gamma * (1 / (i + 1))
+    
     for qid in score_dict:
         if dfQuestion[dfQuestion['question_id'] == qid]['job_title_match'].values[0]:
             score_dict[qid] += delta
+    
+    answered = get_answered_questions(user_id)
     ranked = sorted(score_dict.items(), key=lambda x: x[1], reverse=True)
-    top_qids = [qid for qid, _ in ranked[:num_questions]]
+
+    # Filter out answered questions
+    top_qids = [qid for qid, _ in ranked if qid not in answered][:num_questions]
+    print(dfQuestion[dfQuestion['question_id'].isin(top_qids)])
     return dfQuestion[dfQuestion['question_id'].isin(top_qids)]
 
 # Test
-user_id = "3"
+user_id = "1008f47e-e912-49df-94c6-193e94e9430d"
 print("CF:", recommend_questions_collab(user_id))
 print("CBF:", recommend_questions_content(user_id))
 print("Bandit:", recommender.recommend(user_id)['question_id'].tolist())

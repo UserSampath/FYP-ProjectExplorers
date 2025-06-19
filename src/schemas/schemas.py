@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional,Any
+from typing import Optional,Any,List
 
 class AnswerQuestionRequest(BaseModel):
     question_id: int
@@ -7,6 +7,16 @@ class AnswerQuestionRequest(BaseModel):
     answered_correctly: int
     time_taken: float
     difficulty_encoded: int
+
+class QuestionAnswer(BaseModel):
+    question_id: int
+    time_taken: float
+    selected_option: str
+
+class AnswerQuestionsRequest(BaseModel):
+    assessment_id:str
+    questions: List[QuestionAnswer]
+   
 
 class RegisterRequest(BaseModel):
     fullName:str

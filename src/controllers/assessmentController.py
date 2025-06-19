@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import MetaData, Table, insert,select
+from sqlalchemy import MetaData, Table, insert,select,update
 from src.utils import get_engine
 from src.exception import CustomException
 import sys
@@ -67,6 +67,44 @@ def get_assessment(assessment_id: str) -> dict:
             "status": "success",
             "message": "Assessment fetched successfully.",
             "assessment": dict(result._mapping),
+        }
+
+    except Exception as e:
+        raise CustomException(e, sys)
+    
+
+
+def update_assessment(assessment_id: str, correct: int, question_count: int) -> dict:
+    try:
+        engine = get_engine()
+        metadata = MetaData()
+        metadata.reflect(bind=engine)
+
+        if "assessments" not in metadata.tables:
+            raise Exception("The 'assessments' table does not exist.")
+
+        assessments_table = metadata.tables["assessments"]
+
+        update_stmt = (
+            update(assessments_table)
+            .where(assessments_table.c.assessment_id == assessment_id)
+            .values(correct=correct, question_count=question_count)
+        )
+
+        with engine.connect() as conn:
+            result = conn.execute(update_stmt)
+            conn.commit()
+
+        if result.rowcount == 0:
+            return {
+                "status": "error",
+                "message": "Assessment not found or no update performed.",
+            }
+
+        return {
+            "status": "success",
+            "message": "Assessment updated successfully.",
+            "assessment_id": assessment_id,
         }
 
     except Exception as e:

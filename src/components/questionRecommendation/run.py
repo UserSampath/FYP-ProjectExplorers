@@ -2,8 +2,9 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
-from sqlalchemy import Table, Column, Integer, String, Boolean, MetaData
+from sqlalchemy import Table,BigInteger,DateTime,Float,Text,Column, Integer, String, Boolean, MetaData
 from src.utils import get_engine
+from datetime import datetime,timezone
 # File paths
 question_path = "notebook/data/questionRecommendation/question­_dataset.csv"
 users_path = "notebook/data/questionRecommendation/user.csv"
@@ -30,6 +31,9 @@ difficulty_map = {'Easy': 1, 'Medium': 2, 'Hard': 3}
 dfQuestion['difficulty_encoded'] = dfQuestion['difficulty_level'].map(difficulty_map)
 dfInteractions = dfInteractions.merge(dfQuestion[['question_id', 'difficulty_encoded']], on='question_id', how='left')
 
+dfInteractions['selected_option'] = None
+dfInteractions['assessment_id'] = None
+
 
 engine = get_engine()
 
@@ -51,6 +55,28 @@ processed_users_table = Table(
 # Drop and recreate the table
 metadata.drop_all(engine, [processed_users_table])
 metadata.create_all(engine)
+
+processed_interactions_table = Table(
+    'processed_interactions',
+    metadata,
+    Column('question_id', BigInteger),
+    Column('user_id', String(36)),
+    Column('answered_correctly', BigInteger),
+    Column('time_taken', BigInteger),
+    Column('timeTaken_minmax', Float),
+    Column('difficulty_encoded', BigInteger),
+    Column('selected_option', Text),
+    Column('assessment_id', Text),
+    Column('created_at', DateTime, default=datetime.utcnow)
+)
+
+# Drop and recreate the table
+metadata.drop_all(engine, [processed_interactions_table])
+metadata.create_all(engine)
+
+# Add created_at to DataFrame
+dfInteractions['created_at'] = datetime.now(timezone.utc)
+
 
 # Add new columns to dfUsers
 dfUsers['password'] = ''
@@ -87,7 +113,7 @@ dfJobTitles.to_sql(name='cleaned_job_titles', con=engine, if_exists='append', in
  #Save processed files in db
 dfQuestion.to_sql(name='processed_question', con=engine, if_exists='replace', index=False)
 dfUsers.to_sql(name='processed_users', con=engine, if_exists='append', index=False)
-dfInteractions.to_sql(name='processed_interactions', con=engine, if_exists='replace', index=False)
+dfInteractions.to_sql(name='processed_interactions', con=engine, if_exists='append', index=False)
 # dfJobTitles.to_sql(name='cleaned_job_titles', con=engine, if_exists='replace', index=False) 
 
 

@@ -19,7 +19,7 @@ def hash_password(password: str) -> str:
 
 def generate_jwt_token(user_data: dict) -> str:
     payload = {
-        "exp": datetime.utcnow() + timedelta(hours=1),
+        "exp": datetime.utcnow() + timedelta(hours=24),
         "userId": user_data["user_id"],  # UUID used as subject
         "fullName": user_data["fullName"]
         
