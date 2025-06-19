@@ -3,7 +3,7 @@ from sqlalchemy import insert,text
 from src.utils import get_engine
 from typing import List
 from src.schemas.schemas import QuestionAnswer
-
+from datetime import datetime,timezone
 def answer_question(question_id: int, user_id: int, answered_correctly: bool,
                     time_taken: float, difficulty_encoded: float):
     try:
@@ -95,7 +95,8 @@ def answer_questions(user_id: str, assessment_id: str, questions: List[QuestionA
                 "timeTaken_minmax": timeTaken_minmax,
                 "difficulty_encoded": difficulty_encoded,
                 "selected_option": selected_option,
-                "assessment_id": assessment_id
+                "assessment_id": assessment_id,
+                "created_at": datetime.now(timezone.utc)
             }
 
             processed_data.append(row)
@@ -133,6 +134,7 @@ def question_by_user(user_id: str) -> dict:
                 q.option_b,
                 q.option_c,
                 q.option_d,
+                q.category,
                 i.selected_option,
                 q.correct_option,
                 i.answered_correctly,
@@ -158,6 +160,46 @@ def question_by_user(user_id: str) -> dict:
 
     except Exception as e:
         print("Error in question_by_user:", e)
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+    
+def question_by_assessment(assessment_id: str) -> dict:
+    try:
+        engine = get_engine()
+        query = """
+            SELECT 
+                i.question_id,
+                q.question,
+                q.option_a,
+                q.option_b,
+                q.option_c,
+                q.option_d,
+                q.category,
+                i.selected_option,
+                q.correct_option,
+                i.answered_correctly,
+                i.time_taken,
+                i.assessment_id,
+                i.created_at
+            FROM processed_interactions i
+            JOIN processed_question q ON i.question_id = q.question_id
+            WHERE i.assessment_id = :assessment_id
+        """
+
+        with engine.connect() as conn:
+            result = conn.execute(text(query), {"assessment_id": assessment_id}).mappings()
+            data = [dict(row) for row in result]
+
+        return {
+            "status": "success",
+            "message": f"Retrieved {len(data)} answered questions for assessment {assessment_id}.",
+            "data": data
+        }
+
+    except Exception as e:
+        print("Error in question_by_assessment:", e)
         return {
             "status": "error",
             "message": str(e)

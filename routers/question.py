@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException,Depends
 from src.pipeline.questionRecommendation.recommendQuestion import hybrid_recommendations
 from src.schemas.schemas import AnswerQuestionRequest,APIResponse,AnswerQuestionsRequest
-from src.controllers.questionController import answer_question,answer_questions,question_by_user
+from src.controllers.questionController import answer_question,answer_questions,question_by_user,question_by_assessment
 from src.controllers.assessmentController import update_assessment
 from pydantic import BaseModel
 from src.middleware.findUser import get_current_user
@@ -94,7 +94,31 @@ def getQuestionsByUser(user_id: int = Depends(get_current_user)):
         return {
             "status": "success",
             "success": True,
-            "message": result.get("message", "Answers saved successfully."),
+            "message": result.get("message", "Answers get successfully."),
+            "data": result.get("data")
+        }
+
+    except HTTPException as he:
+        raise he
+
+    except Exception as e:
+        raise_custom_error(500, f"Internal Server Error: {str(e)}")
+
+
+@router.get("/getByAssessment/{assessment_id}")
+def getQuestionsByUser(assessment_id:str):
+    try:
+        result = question_by_assessment(
+            assessment_id=assessment_id
+        )
+
+        if result["status"] == "error":
+            raise HTTPException(status_code=500, detail=result["message"])
+        
+        return {
+            "status": "success",
+            "success": True,
+            "message": result.get("message", "Answers get successfully."),
             "data": result.get("data")
         }
 

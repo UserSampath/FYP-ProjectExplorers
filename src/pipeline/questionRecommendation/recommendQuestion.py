@@ -164,9 +164,9 @@ def hybrid_recommendations(user_id, num_questions=5, alpha=0.35, beta=0.25, gamm
     return dfQuestion[dfQuestion['question_id'].isin(top_qids)]
 
 # Test
-user_id = "1008f47e-e912-49df-94c6-193e94e9430d"
-print("CF:", recommend_questions_collab(user_id))
-print("CBF:", recommend_questions_content(user_id))
-print("Bandit:", recommender.recommend(user_id)['question_id'].tolist())
-print("Job Title:", recommend_questions_job_title_only(user_id))
-print("Hybrid:", hybrid_recommendations(user_id)['question_id'].tolist())
+# user_id = "1008f47e-e912-49df-94c6-193e94e9430d"
+# print("CF:", recommend_questions_collab(user_id))
+# print("CBF:", recommend_questions_content(user_id))
+# print("Bandit:", recommender.recommend(user_id)['question_id'].tolist())
+# print("Job Title:", recommend_questions_job_title_only(user_id))
+# print("Hybrid:", hybrid_recommendations(user_id)['question_id'].tolist())
