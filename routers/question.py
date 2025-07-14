@@ -16,7 +16,7 @@ def question_recommendation( req: RecommendationRequest,user_id: int = Depends(g
     try:
         recommendations_df = hybrid_recommendations(user_id, req.num_questions)
 
-        result = recommendations_df[["question_id", "question", "topic", "tags", "difficulty_level","option_A","option_B","option_C","option_C","option_D"]].to_dict(orient="records")
+        result = recommendations_df[["question_id", "question", "topic", "tags", "difficulty_level","option_A","option_B","option_C","option_D"]].to_dict(orient="records")
         return {"status":"200", "success":True, "message":"Success getting questions" ,"data":{
             "user_id": user_id, "recommended_questions": result
         }}
