@@ -8,6 +8,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import TruncatedSVD
 from sklearn.metrics.pairwise import cosine_similarity
 import re
+import os
+from pathlib import Path
 from src.utils import get_engine
 
 
@@ -122,51 +124,68 @@ class QuestionBanditRecommender:
 
 recommender = QuestionBanditRecommender(dfQuestion, dfUsers, dfInteractions)
 
-# Job Title Matching
-unwanted = ["se", "software engineer", "associate", "full stack", "fullstack", "developer", "designer", "engineer"]
-pattern = r'\b(?:' + '|'.join(map(re.escape, unwanted)) + r')\b'
-dfJobTitles['title'] = dfJobTitles['title'].str.lower().str.replace(pattern, '', regex=True)
-dfJobTitles['title'] = dfJobTitles['title'].str.replace(r'\s+', ' ', regex=True).str.strip()
-job_keywords = dfJobTitles['title'][dfJobTitles['title'].str.strip() != ''].unique().tolist()
+# Technology Keyword Matching
+csv_path = Path("notebook/data/questionRecommendation/technical_words.csv")  # Adjusted path format
+df_keywords = pd.read_csv(csv_path)
 
+TECH_KEYWORDS = df_keywords['technical_word'].dropna().str.strip().str.lower().unique().tolist()
+
+# Lowercase all string columns in dfQuestion
 str_cols = dfQuestion.select_dtypes(include=['object']).columns
 dfQuestion[str_cols] = dfQuestion[str_cols].apply(lambda col: col.str.lower())
-def match_title(row):
-    return any(any(k in str(row[col]) for k in job_keywords) for col in ['question', 'topic', 'tags'])
-dfQuestion['job_title_match'] = dfQuestion.apply(match_title, axis=1).astype(int)
 
-def recommend_questions_job_title_only(user_id, n=10):
+# Match questions that contain any of the tech keywords in relevant columns
+def match_technology(row):
+    return any(
+        any(tech in str(row[col]) for tech in TECH_KEYWORDS)
+        for col in ['question', 'topic', 'tags']
+    )
+
+dfQuestion['tech_keyword_match'] = dfQuestion.apply(match_technology, axis=1).astype(int)
+
+
+def recommend_questions_job_title_only(user_id, n=20):
     answered = get_answered_questions(user_id)
-    job_related = dfQuestion[(dfQuestion['job_title_match'] == 1) & (~dfQuestion['question_id'].isin(answered))]
+    job_related = dfQuestion[(dfQuestion['tech_keyword_match'] == 1) & (~dfQuestion['question_id'].isin(answered))]
     return job_related.head(n)['question_id'].tolist()
+
 
 # Hybrid Recommendation
 def hybrid_recommendations(user_id, num_questions=5, alpha=0.35, beta=0.25, gamma=0.25, delta=0.15):
+    # Get top candidates from each method
     collab = recommend_questions_collab(user_id, num_questions * 2)
     content = recommend_questions_content(user_id, num_questions * 2)
-    bandit = recommender.recommend(user_id, top_n=num_questions * 2)['question_id'].tolist()
-    
+    bandit_df = recommender.recommend(user_id, top_n=num_questions * 2)
+    bandit = bandit_df['question_id'].tolist()
+    job_title_based = recommend_questions_job_title_only(user_id, num_questions * 3)
+
     score_dict = {}
-    for i, qid in enumerate(collab): score_dict[qid] = score_dict.get(qid, 0) + alpha * (1 / (i + 1))
-    for i, qid in enumerate(content): score_dict[qid] = score_dict.get(qid, 0) + beta * (1 / (i + 1))
-    for i, qid in enumerate(bandit): score_dict[qid] = score_dict.get(qid, 0) + gamma * (1 / (i + 1))
-    
+
+    # Weighted scores from each method
+    for i, qid in enumerate(collab):
+        score_dict[qid] = score_dict.get(qid, 0) + alpha * (1 / (i + 1))
+    for i, qid in enumerate(content):
+        score_dict[qid] = score_dict.get(qid, 0) + beta * (1 / (i + 1))
+    for i, qid in enumerate(bandit):
+        score_dict[qid] = score_dict.get(qid, 0) + gamma * (1 / (i + 1))
+
+    # Apply delta bonus ONLY if the question also comes from the job title matching
     for qid in score_dict:
-        if dfQuestion[dfQuestion['question_id'] == qid]['job_title_match'].values[0]:
+        if qid in job_title_based:
             score_dict[qid] += delta
-    
+
+    # Exclude already answered
     answered = get_answered_questions(user_id)
     ranked = sorted(score_dict.items(), key=lambda x: x[1], reverse=True)
-
-    # Filter out answered questions
     top_qids = [qid for qid, _ in ranked if qid not in answered][:num_questions]
-    print(dfQuestion[dfQuestion['question_id'].isin(top_qids)])
+
     return dfQuestion[dfQuestion['question_id'].isin(top_qids)]
 
+
 # Test
-# user_id = "1008f47e-e912-49df-94c6-193e94e9430d"
-# print("CF:", recommend_questions_collab(user_id))
-# print("CBF:", recommend_questions_content(user_id))
-# print("Bandit:", recommender.recommend(user_id)['question_id'].tolist())
-# print("Job Title:", recommend_questions_job_title_only(user_id))
-# print("Hybrid:", hybrid_recommendations(user_id)['question_id'].tolist())
+user_id = "d0549619-d81d-44e9-b52d-640821444883"
+print("CF:", recommend_questions_collab(user_id))
+print("CBF:", recommend_questions_content(user_id))
+print("Bandit:", recommender.recommend(user_id)['question_id'].tolist())
+print("Job Title:", recommend_questions_job_title_only(user_id))
+print("Hybrid:", hybrid_recommendations(user_id,20)['question_id'].tolist())

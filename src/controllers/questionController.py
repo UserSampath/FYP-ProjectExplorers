@@ -81,7 +81,7 @@ def answer_questions(user_id: str, assessment_id: str, questions: List[QuestionA
             correct_option = q_info['correct_option']
             difficulty_encoded = q_info['difficulty_encoded']
 
-            print("correct 🥲",selected_option,correct_option)
+            # print("correct 🥲",selected_option,correct_option) 
             is_correct = int(selected_option == correct_option)
 
             timeTaken_minmax = (q.time_taken - min_time) / (max_time - min_time)

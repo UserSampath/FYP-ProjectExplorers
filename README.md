@@ -37,3 +37,5 @@ MODIFY COLUMN user_id VARCHAR(36);
 
 ALTER TABLE processed_interactions
 ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+http://127.0.0.1:8000/docs
