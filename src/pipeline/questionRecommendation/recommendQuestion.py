@@ -27,7 +27,13 @@ def load_data():
     dfQuestion = pd.read_sql("SELECT * FROM processed_question", engine)
     dfUsers = pd.read_sql("SELECT * FROM processed_users", engine)
     dfInteractions = pd.read_sql("SELECT * FROM processed_interactions", engine)
-    return dfQuestion, dfUsers, dfInteractions
+    dfJobPostTitles = pd.read_sql(
+    "SELECT * FROM cleaned_job_titles ORDER BY id DESC LIMIT 100",
+    engine
+)
+
+
+    return dfQuestion, dfUsers, dfInteractions,dfJobPostTitles
 
 
 # ==================== Preprocessing ====================
@@ -140,19 +146,17 @@ class QuestionBanditRecommender:
         return self.qdf[self.qdf['question_id'].isin(top)]
 
 
-def recommend_questions_job_title_only(dfQuestion, dfInteractions, user_id, n=20):
+def recommend_questions_job_title_only(dfQuestion, dfInteractions, user_id, job_keywords, n=20):
     answered = get_answered_questions(dfInteractions, user_id)
 
     def count_keyword_matches(text):
         text = str(text).lower()
-        return sum(1 for keyword in TECH_KEYWORDS if keyword in text)
+        return sum(1 for keyword in job_keywords if keyword in text)
 
-    # Filter unanswered questions with keyword match
-    job_related = dfQuestion[dfQuestion['question_id'].isin(
-        dfQuestion[dfQuestion['tech_keyword_match'] == 1]['question_id']
-    ) & (~dfQuestion['question_id'].isin(answered))].copy()
+    # Filter unanswered questions
+    job_related = dfQuestion[~dfQuestion['question_id'].isin(answered)].copy()
 
-    # Compute relevance score
+    # Compute keyword match score
     job_related['match_score'] = job_related.apply(
         lambda row: (
             count_keyword_matches(row['question']) +
@@ -162,11 +166,18 @@ def recommend_questions_job_title_only(dfQuestion, dfInteractions, user_id, n=20
         axis=1
     )
 
-    # Sort by highest score and return top-n
+    job_related = job_related[job_related['match_score'] > 0]
     job_related = job_related.sort_values(by='match_score', ascending=False)
+
     return job_related.head(n)['question_id'].tolist()
 
 
+
+def extract_job_keywords(dfJobPostTitles):
+    all_titles = ' '.join(dfJobPostTitles['title'].astype(str).str.lower().tolist())
+    words = all_titles.split()
+    filtered = [w for w in words if w in TECH_KEYWORDS]
+    return list(set(filtered))  # Unique keywords
 
 # ==================== Hybrid Recommender ====================
 
@@ -174,12 +185,14 @@ def hybrid_recommendations(user_id, num_questions=5, alpha=0.35, beta=0.25, gamm
     global recommender
 
     # Load fresh data
-    dfQuestion, dfUsers, dfInteractions = load_data()
+    dfQuestion, dfUsers, dfInteractions,dfJobPostTitles = load_data()
 
     # Preprocess
     str_cols = dfQuestion.select_dtypes(include=['object']).columns
     dfQuestion[str_cols] = dfQuestion[str_cols].apply(lambda col: col.str.lower())
-    dfQuestion['tech_keyword_match'] = dfQuestion.apply(match_technology, axis=1).astype(int)
+
+    job_keywords = extract_job_keywords(dfJobPostTitles)
+    print("Extracted Job Keywords:", job_keywords)
 
     # Update models
     update_collab_model(dfInteractions)
@@ -191,13 +204,13 @@ def hybrid_recommendations(user_id, num_questions=5, alpha=0.35, beta=0.25, gamm
     content = recommend_questions_content(user_id, dfUsers, dfQuestion, dfInteractions, num_questions * 2)
     bandit_df = recommender.recommend(user_id, top_n=num_questions * 2)
     bandit = bandit_df['question_id'].tolist()
-    job_title_based = recommend_questions_job_title_only(dfQuestion, dfInteractions, user_id, num_questions * 3)
+    job_title_based = recommend_questions_job_title_only(dfQuestion, dfInteractions, user_id, job_keywords, num_questions * 3)
 
      # TEST
     print("Collaborative Filtering (CF):", collab)
     print("Content-Based Filtering (CBF):", content)
     print("Bandit Recommendations:", bandit)
-    print("Job Title Matched:", job_title_based)
+    print("Trending Job Title Matched:", job_title_based)
 
     score_dict = {}
     for i, qid in enumerate(collab):

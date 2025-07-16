@@ -169,3 +169,180 @@ xml
 csv
 http
 https
+typescript
+shell
+vbscript
+pl/sql
+abap
+tcl
+delphi
+assembly
+sas
+stata
+html
+css
+scss
+less
+web3
+d3.js
+three.js
+backbone.js
+ember.js
+handlebars
+ejs
+pug
+jetpack compose
+android studio
+swiftui
+mobile development
+pwa
+react native
+hybrid app
+ec2
+s3
+lambda
+cloudformation
+cloudwatch
+cloudtrail
+azure devops
+azure functions
+gke
+eks
+aks
+cloud run
+cloudflare
+nginx
+apache
+ngrok
+security+
+cissp
+ceh
+pentest
+threat modeling
+iam
+mfa
+2fa
+siem
+endpoint security
+vulnerability scanning
+static analysis
+dynamic analysis
+dbt
+etl
+elt
+data warehouse
+data lake
+snowflake
+bigquery
+redshift
+athena
+data modeling
+data pipeline
+dataops
+bi developer
+mlops
+ml engineer
+feature engineering
+model serving
+nlp
+rl
+time series
+ab testing
+experiment design
+deep learning
+computer vision
+bayesian
+mlflow
+tensorboard
+onnx
+transformers
+huggingface
+autoML
+chatbot
+langchain
+openai
+llm
+rasa
+postman
+soapui
+loadrunner
+gatling
+locust
+playwright
+qa engineer
+test automation
+unit testing
+integration testing
+e2e testing
+bdd
+tdd
+devops engineer
+build pipeline
+release management
+sonarqube
+nexus
+artifactory
+configuration management
+infrastructure as code
+cloud-native
+observability
+snowflake
+hbase
+bigtable
+columnar db
+document db
+timescale
+sql
+nosql
+key-value store
+rdbms
+visual studio
+intellij
+pycharm
+eclipse
+vscode
+dockerhub
+brew
+chocolatey
+npm
+yarn
+pnpm
+make
+cmake
+gnu
+protobuf
+parquet
+avro
+orc
+mqtt
+amqp
+webhooks
+api gateway
+aws certified
+azure certified
+gcp certified
+pmp
+scrum master
+cspo
+csm
+full stack
+frontend
+backend
+sre
+platform engineer
+cloud engineer
+data analyst
+data engineer
+data scientist
+ml engineer
+site reliability
+infrastructure
+qa
+test engineer
+devops
+security analyst
+network engineer
+system administrator
+ai engineer
+software architect
+genai
