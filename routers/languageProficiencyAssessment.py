@@ -1,9 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel,Field
-from src.controllers.languageProficiencyController import create_assessment,get_assessment,update_assessment
+from src.controllers.languageProficiencyController import create_assessment,get_assessment,getUserLastPerformance,update_assessment
 from src.middleware.findUser import get_current_user
 from src.exception import raise_custom_error
-
+from typing import List, Optional
+from datetime import datetime
 router = APIRouter()
 
 # Request schema for creating assessment (only user_id from token, so no body needed)
@@ -12,6 +13,22 @@ class AssessmentCreateResponse(BaseModel):
     success: bool
     message: str
     data: dict
+
+class AssessmentModel(BaseModel):
+    assessment_id: str
+    user_id: str
+    topic: str
+    cohesion: Optional[float]
+    grammar: Optional[float]
+    syntax: Optional[float]
+    overall: Optional[float]
+    created_at: datetime
+
+class AssessmentsGetResponse(BaseModel):
+    status: str
+    success: bool
+    message: str
+    data: List[AssessmentModel] 
 
 class CreateAssessmentRequest(BaseModel):
     topic: str
@@ -56,7 +73,22 @@ def fetch_assessment(assessment_id: str):
         raise_custom_error(500, f"Internal Server Error: {str(e)}")
 
 
-
+@router.get("/getUserLastPerformance", response_model=AssessmentsGetResponse)
+def fetch_assessment(user_id: str = Depends(get_current_user)):
+    try:
+        result = getUserLastPerformance(user_id)
+        if result["status"] == "error":
+            raise_custom_error(404, result["message"])
+        return {
+            "status": "success",
+            "success": True,
+            "message": result["message"],
+            "data": result["assessments"]
+        }
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise_custom_error(500, f"Internal Server Error: {str(e)}")
 class AssessmentUpdateRequest(BaseModel):
     cohesion: float
     grammar: float

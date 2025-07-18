@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import MetaData, Table, insert,select,update
+from sqlalchemy import MetaData, Table, insert,select,update,and_, null
 from src.utils import get_engine
 from src.exception import CustomException
 import sys
@@ -73,7 +73,44 @@ def get_assessment(assessment_id: str) -> dict:
     except Exception as e:
         raise CustomException(e, sys)
     
+def getUserLastPerformance(userId: str) -> dict:
+    try:
 
+        print(f"Fetching last performance for user: {userId}")
+        engine = get_engine()
+        metadata = MetaData()
+        metadata.reflect(bind=engine)
+
+        if "languageproficiencyassessments" not in metadata.tables:
+            raise Exception("The 'languageproficiencyassessments' table does not exist.")
+
+        assessments_table = metadata.tables["languageproficiencyassessments"]
+
+        query = (
+            select(assessments_table)
+            .where(
+            and_(
+            assessments_table.c.user_id == userId,
+            assessments_table.c.overall.isnot(null())
+            )
+    )
+    .order_by(assessments_table.c.created_at.desc())
+    .limit(5)
+)
+
+        with engine.connect() as conn:
+            results = conn.execute(query).fetchall()
+        assessments = [dict(row._mapping) for row in results]
+
+        return {
+            "status": "success",
+            "message": "Assessments fetched successfully.",
+            "assessments": assessments,
+        }
+
+    except Exception as e:
+        print(f"Error fetching last performance: {str(e)}")
+        raise CustomException(e, sys)
 
 def update_assessment(assessment_id: str,cohesion:float,grammar:float,syntax:float,overall:float) -> dict:
     try:
