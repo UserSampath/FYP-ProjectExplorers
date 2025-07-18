@@ -17,6 +17,7 @@ librosa
 soundfile
 bcrypt
 python-dotenv
+deepface
 python-jose[cryptography]
 #-e .
 
