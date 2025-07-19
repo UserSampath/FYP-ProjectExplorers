@@ -112,7 +112,15 @@ def getUserLastPerformance(userId: str) -> dict:
         print(f"Error fetching last performance: {str(e)}")
         raise CustomException(e, sys)
 
-def update_assessment(assessment_id: str,average_confidence:float,stability_score:float,final_confidence:float,penalty_adjusted_confidence:float,confidence_label:str) -> dict:
+def update_assessment(
+    assessment_id: str,
+    average_confidence: float,
+    stability_score: float,
+    final_confidence: float,
+    penalty_adjusted_confidence: float,
+    confidence_label: str,
+    emotion_counts: dict = None
+) -> dict:
     try:
         engine = get_engine()
         metadata = MetaData()
@@ -123,10 +131,23 @@ def update_assessment(assessment_id: str,average_confidence:float,stability_scor
 
         assessments_table = metadata.tables["videointerviewassessments"]
 
+        update_values = {
+            "average_confidence": average_confidence,
+            "stability_score": stability_score,
+            "final_confidence": final_confidence,
+            "penalty_adjusted_confidence": penalty_adjusted_confidence,
+            "confidence_label": confidence_label,
+        }
+
+        # Add emotion counts if provided
+        if emotion_counts:
+            for emotion in ["happy", "surprise", "neutral", "calm", "sad", "fear", "angry", "disgust"]:
+                update_values[emotion] = emotion_counts.get(emotion, 0)
+
         update_stmt = (
             update(assessments_table)
             .where(assessments_table.c.assessment_id == assessment_id)
-            .values(average_confidence=average_confidence, stability_score=stability_score, final_confidence=final_confidence, penalty_adjusted_confidence=penalty_adjusted_confidence,confidence_label=confidence_label)
+            .values(**update_values)
         )
 
         with engine.connect() as conn:

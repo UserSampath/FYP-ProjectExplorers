@@ -33,6 +33,8 @@ uvicorn main:app --reload
 python -m src.lib.assessmentTableRunner
 python -m src.lib.languageProficiencyAssessmentTableRunner 
 python -m src.lib.videoInterviewAssessmentTableRunner
+python -m src.lib.suggestionTableRunner
+
 
 ALTER TABLE processed_interactions
 MODIFY COLUMN user_id VARCHAR(36);

@@ -6,7 +6,7 @@ import mediapipe as mp
 import os
 from scipy.ndimage import gaussian_filter1d
 from src.controllers.videoInterviewAssessmentController import update_assessment
-
+from collections import Counter
 # --- Preprocessing for Low Quality Frames ---
 def preprocess_frame(frame):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -105,14 +105,15 @@ def analyze_video(video_path,assessment_id):
     else:
         label = "Low Confidence"
 
-
-        update_assessment(
+    emotion_counts = Counter(detected_emotions)
+    update_assessment(
             assessment_id=assessment_id,
             average_confidence=emotion_avg_conf,
             stability_score=stability,
             final_confidence=final_conf,
             penalty_adjusted_confidence=adjusted_conf,
-            confidence_label=label
+            confidence_label=label,
+             emotion_counts=emotion_counts
         )
 
     return {

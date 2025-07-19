@@ -12,8 +12,9 @@ from pyAudioAnalysis import audioBasicIO
 from pyAudioAnalysis import ShortTermFeatures
 import librosa
 import numpy as np
+from src.controllers.suggestionController import createSuggestions
 
-def extract_audio_features(file_path):
+def extract_audio_features(assessment_id,file_path):
     warnings.filterwarnings("ignore")
 
     # --- Load audio ---
@@ -84,6 +85,8 @@ def extract_audio_features(file_path):
     if zcr > 0.4:
         suggestions.append("There might be background noise; ensure a quiet recording environment.")
 
+    if len(suggestions) > 0:
+        createSuggestions(assessment_id, suggestions)
     # Final return object
     return {
         "average_loudness": float(avg_loudness),

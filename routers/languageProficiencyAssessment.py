@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel,Field
 from src.controllers.languageProficiencyController import create_assessment,get_assessment,getUserLastPerformance,update_assessment
+from src.controllers.suggestionController import getSuggestionsByAssessmentId
+
 from src.middleware.findUser import get_current_user
 from src.exception import raise_custom_error
 from typing import List, Optional
@@ -131,6 +133,24 @@ def update_assessment_endpoint(
             "data": {"assessment_id": result["assessment_id"]},
         }
 
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise_custom_error(500, f"Internal Server Error: {str(e)}")
+
+
+@router.get("/getSuggestions/{assessment_id}")
+def fetch_assessment(assessment_id: str):
+    try:
+        result = getSuggestionsByAssessmentId(assessment_id)
+        if result["status"] == "error":
+            raise_custom_error(404, result["message"])
+        return {
+            "status": "success",
+            "success": True,
+            "message": result["message"],
+            "data": result["data"]
+        }
     except HTTPException as he:
         raise he
     except Exception as e:

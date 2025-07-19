@@ -1,11 +1,11 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException,Form
 import os
 from src.components.audioAnalysis.audioAnalysis import extract_audio_features
 from pydub import AudioSegment
 router = APIRouter()
 
 @router.post("/analyzeAudio")
-async def analyze_audio(file: UploadFile = File(...)):
+async def analyze_audio( assessment_id: str = Form(...),file: UploadFile = File(...)):
     try:
         original_path = "temp_audio.webm"
         wav_path = "temp_audio.wav"
@@ -20,7 +20,7 @@ async def analyze_audio(file: UploadFile = File(...)):
         audio.export(wav_path, format="wav")
 
         # Now extract features
-        features = extract_audio_features(wav_path)
+        features = extract_audio_features(assessment_id,wav_path)
 
         # Clean up files
         os.remove(original_path)
