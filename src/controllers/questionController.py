@@ -4,16 +4,15 @@ from src.utils import get_engine
 from typing import List
 from src.schemas.schemas import QuestionAnswer
 from datetime import datetime,timezone
+from src.pipeline.questionRecommendation.recommendQuestionGraphBased import add_new_interaction
 def answer_question(question_id: int, user_id: int, answered_correctly: bool,
                     time_taken: float, difficulty_encoded: float):
     try:
 
-        max_time = 30  # e.g., 2 minutes
-        min_time = 3   # e.g., 1 second
+        max_time = 30  
+        min_time = 3   
         timeTaken_minmax = (time_taken - min_time) / (max_time - min_time)
-        timeTaken_minmax = max(0, min(timeTaken_minmax, 1))  # clip between 0 and 1
-
-        # Save data to DB
+        timeTaken_minmax = max(0, min(timeTaken_minmax, 1))  
         data = {
             "question_id": question_id,
             "user_id": user_id,
@@ -43,6 +42,7 @@ def answer_question(question_id: int, user_id: int, answered_correctly: bool,
 
 def answer_questions(user_id: str, assessment_id: str, questions: List[QuestionAnswer]) -> dict:
     try:
+        print("Questions",questions)
         processed_data = []
 
         max_time = 30
@@ -98,6 +98,14 @@ def answer_questions(user_id: str, assessment_id: str, questions: List[QuestionA
                 "assessment_id": assessment_id,
                 "created_at": datetime.now(timezone.utc)
             }
+
+            new_interaction = {"user_id": user_id,
+                               "question_id": q.question_id,
+                               "answered_correctly": is_correct,
+                               "created_at": datetime.now(timezone.utc)
+                               }
+            add_new_interaction(new_interaction)
+            
 
             processed_data.append(row)
 

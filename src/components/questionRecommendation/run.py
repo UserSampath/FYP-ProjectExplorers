@@ -42,7 +42,7 @@ metadata = MetaData()
 processed_users_table = Table(
     'processed_users',
     metadata,
-    Column('user_id', String(255), primary_key=True),  # Keep existing user_id
+    Column('user_id', String(255), primary_key=True), 
     Column('expertise_level', String(255)),
     Column('years_of_experience', Integer),
     Column('familiar_technologies', String(255)),
@@ -52,7 +52,7 @@ processed_users_table = Table(
     Column('train', Boolean)
 )
 
-# Drop and recreate the table
+
 metadata.drop_all(engine, [processed_users_table])
 metadata.create_all(engine)
 
@@ -70,29 +70,23 @@ processed_interactions_table = Table(
     Column('created_at', DateTime, default=datetime.utcnow)
 )
 
-# Drop and recreate the table
 metadata.drop_all(engine, [processed_interactions_table])
 metadata.create_all(engine)
 
-# Add created_at to DataFrame
 dfInteractions['created_at'] = datetime.now(timezone.utc)
 
 
-# Add new columns to dfUsers
 dfUsers['password'] = ''
 dfUsers['fullName'] = ''
 dfUsers['email'] = ''
 dfUsers['train'] = True
 
 
-# Ensure types are appropriate
 dfUsers['user_id'] = dfUsers['user_id'].astype(int)
 dfUsers['years_of_experience'] = dfUsers['years_of_experience'].fillna(0).astype(int)
 dfUsers['train'] = dfUsers['train'].astype(bool)
 
 
-
-# Create cleaned_job_titles table with auto-increment ID
 job_titles_table = Table(
     'cleaned_job_titles',
     metadata,
@@ -100,17 +94,13 @@ job_titles_table = Table(
     Column('title', String(255))
 )
 
-# Drop if exists and create new
 metadata.drop_all(engine, [job_titles_table])
 metadata.create_all(engine)
 
-# Write data (excluding ID so it auto-increments)
-dfJobTitles.columns = ['title']  # Ensure correct column name
+dfJobTitles.columns = ['title']
 dfJobTitles.to_sql(name='cleaned_job_titles', con=engine, if_exists='append', index=False)
 
 
-
- #Save processed files in db
 dfQuestion.to_sql(name='processed_question', con=engine, if_exists='replace', index=False)
 dfUsers.to_sql(name='processed_users', con=engine, if_exists='append', index=False)
 dfInteractions.to_sql(name='processed_interactions', con=engine, if_exists='append', index=False)
