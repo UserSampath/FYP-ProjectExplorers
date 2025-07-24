@@ -9,7 +9,7 @@ dfQuestion = pd.read_sql("SELECT * FROM processed_question", engine)
 dfUsers = pd.read_sql("SELECT * FROM processed_users", engine)
 dfInteractions = pd.read_sql("SELECT * FROM processed_interactions", engine)
 
-# Neo4j connection parameters
+
 uri = "neo4j+s://46f0ed2d.databases.neo4j.io"
 username = "neo4j"
 password = "ZMivcvxHF7XHYbD1T_hkMsMBnBxNof30ThSJOnAfkkA"
@@ -21,14 +21,6 @@ def clear_graph(driver):
         session.run("MATCH (n) DETACH DELETE n")
     print("Graph cleared: all nodes and relationships deleted.")
 
-
-updated_user = {
-    "user_id": "997", 
-    "expertise_level": "Intermediate",
-    "years_of_experience": 3,
-    "familiar_technologies": "Python,Machine Learning"
-}
-
 def update_existing_user(user):
     print(user,"updating user")
     with driver.session() as session:
@@ -36,10 +28,6 @@ def update_existing_user(user):
         if 'familiar_technologies' in user and isinstance(user['familiar_technologies'], str):
             session.execute_write(create_user_question_tech_relation, user)
 
-new_user = {
-    "user_id": "997",
-
-}
 def add_new_user(user):
     print(user,"user added")
     with driver.session() as session:
@@ -48,12 +36,6 @@ def add_new_user(user):
             session.execute_write(create_user_question_tech_relation, user)
 
 
-new_interaction = {
-    "user_id": "999",                
-    "question_id": "Q123",         
-    "answered_correctly": True,      
-    "created_at": "2025-07-20"       
-}
 def add_new_interaction(new_interaction):
     with driver.session() as session:
         session.execute_write(create_interaction, new_interaction)

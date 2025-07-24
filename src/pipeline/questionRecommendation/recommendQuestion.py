@@ -45,9 +45,9 @@ def update_collab_model(dfInteractions):
         values='weighted_score',
         aggfunc='mean'
     ).fillna(0)
-
+    #Singular Value Decomposition
     interaction_np = interaction_matrix.values
-    U, sigma, Vt = svds(interaction_np, k=5)
+    U, sigma, Vt = svds(interaction_np, k=5) 
     sigma = np.diag(sigma)
     predicted = np.dot(np.dot(U, sigma), Vt)
     predicted_df = pd.DataFrame(predicted, index=interaction_matrix.index, columns=interaction_matrix.columns)
@@ -81,7 +81,8 @@ class QuestionBanditRecommender:
                 t = row['time_taken']
                 self.successes[qid] += 1 if t <= 10 else 0.8 if t <= 20 else 0.5
 
-    def ucb_score(self, qid, total):
+    # Upper Confidence Bound
+    def ucb_score(self, qid, total): 
         mean = self.successes[qid] / self.attempts[qid]
         return mean + np.sqrt((2 * np.log(total)) / self.attempts[qid])
 
@@ -112,17 +113,14 @@ class QuestionBanditRecommender:
         return self.qdf[self.qdf['question_id'].isin(top)]
 
 
-def recommend_questions_job_title_only(dfQuestion, dfInteractions, user_id, job_keywords, n=20):
+def recommend_questions_job_title(dfQuestion, dfInteractions, user_id, job_keywords, n=20):
     answered = get_answered_questions(dfInteractions, user_id)
 
     def count_keyword_matches(text):
         text = str(text).lower()
         return sum(1 for keyword in job_keywords if keyword in text)
 
-    # Filter unanswered questions
     job_related = dfQuestion[~dfQuestion['question_id'].isin(answered)].copy()
-
-    # Compute keyword match score
     job_related['match_score'] = job_related.apply(
         lambda row: (
             count_keyword_matches(row['question']) +
@@ -131,7 +129,6 @@ def recommend_questions_job_title_only(dfQuestion, dfInteractions, user_id, job_
         ),
         axis=1
     )
-
     job_related = job_related[job_related['match_score'] > 0]
     job_related = job_related.sort_values(by='match_score', ascending=False)
 
@@ -170,7 +167,7 @@ def hybrid_recommendations(user_id, num_questions=5, alpha=0.35, beta=0.25, gamm
     graphBased=recommend_questions_by_user(user_id)
     bandit_df = recommender.recommend(user_id, top_n=num_questions * 2)
     bandit = bandit_df['question_id'].tolist()
-    job_title_based = recommend_questions_job_title_only(dfQuestion, dfInteractions, user_id, job_keywords, num_questions * 3)
+    job_title_based = recommend_questions_job_title(dfQuestion, dfInteractions, user_id, job_keywords, num_questions * 3)
 
      # TEST
     print("Collaborative Filtering (CF):", collab)

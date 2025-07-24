@@ -3,10 +3,8 @@ import numpy as np
 from deepface import DeepFace
 from collections import Counter
 import mediapipe as mp
-import os
 from scipy.ndimage import gaussian_filter1d
 from src.controllers.videoInterviewAssessmentController import update_assessment
-from collections import Counter
 # --- Preprocessing for Low Quality Frames ---
 def preprocess_frame(frame):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -50,6 +48,7 @@ def analyze_emotion(frame):
         return result[0]['dominant_emotion'] if 'dominant_emotion' in result[0] else "No Face"
     except Exception as e:
         return "No Face"
+
 
 # --- Stability & Confidence ---
 def calculate_stability_score(emotions):
