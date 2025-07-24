@@ -15,6 +15,7 @@ class AssessmentCreateResponse(BaseModel):
     success: bool
     message: str
     data: dict
+    
 
 class AssessmentModel(BaseModel):
     assessment_id: str
