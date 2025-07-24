@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 from src.utils import get_engine
 import os
 from dotenv import load_dotenv
+from src.pipeline.questionRecommendation.recommendQuestionGraphBased import add_new_user,update_existing_user
+
 
 
 load_dotenv() 
@@ -78,6 +80,10 @@ def userRegister(fullName: str, email: str, password: str):
                 "years_of_experience": user_data.get("years_of_experience"),
                 "familiar_technologies": user_data.get("familiar_technologies"),
             }
+            graph_user = {"user_id": user_id}
+            add_new_user(graph_user)
+
+
 
         return {
             "status": "success",
@@ -193,6 +199,16 @@ def userUpdate(user_id: str, **fields):
             updated_user = dict(updated_user_row)
             updated_user.pop("password", None)
 
+            graph_user = {"user_id": user_id}
+            if "expertise_level" in fields:
+                graph_user["expertise_level"] = updated_user.get("expertise_level")
+            if "years_of_experience" in fields:
+                graph_user["years_of_experience"] = updated_user.get("years_of_experience")
+            if "familiar_technologies" in fields:
+                graph_user["familiar_technologies"] = updated_user.get("familiar_technologies")
+
+            if len(graph_user) > 1: 
+                update_existing_user(graph_user)
             return {
                 "status": "success",
                 "message": "User updated successfully",

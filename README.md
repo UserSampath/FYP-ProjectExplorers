@@ -34,6 +34,10 @@ python -m src.lib.assessmentTableRunner
 python -m src.lib.languageProficiencyAssessmentTableRunner 
 python -m src.lib.videoInterviewAssessmentTableRunner
 python -m src.lib.suggestionTableRunner
+python -m src.pipeline.questionRecommendation.recommendQuestionGraphBased
+python -m src.pipeline.questionRecommendation.text
+
+
 
 
 ALTER TABLE processed_interactions
@@ -43,3 +47,4 @@ ALTER TABLE processed_interactions
 ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 
 http://127.0.0.1:8000/docs
+CALL db.schema.visualization()

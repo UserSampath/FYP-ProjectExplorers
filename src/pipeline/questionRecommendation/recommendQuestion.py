@@ -1,20 +1,16 @@
 import pandas as pd
 import numpy as np
-from sklearn.neighbors import NearestNeighbors
 from scipy.sparse.linalg import svds
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.decomposition import TruncatedSVD
 from sklearn.metrics.pairwise import cosine_similarity
 from pathlib import Path
 from src.utils import get_engine
+from src.pipeline.questionRecommendation.recommendQuestionGraphBased import recommend_questions_by_user
 
-# Global Models
+
 predicted_df = None
-vectorizer = None
-tfidf_matrix = None
 recommender = None
 
-# Load technical keywords
+
 csv_path = Path("notebook/data/questionRecommendation/technical_words.csv")
 df_keywords = pd.read_csv(csv_path)
 TECH_KEYWORDS = df_keywords['technical_word'].dropna().str.strip().str.lower().unique().tolist()
@@ -32,24 +28,7 @@ def load_data():
     engine
 )
 
-
     return dfQuestion, dfUsers, dfInteractions,dfJobPostTitles
-
-
-# ==================== Preprocessing ====================
-
-def match_technology(row):
-    return any(
-        any(tech in str(row[col]) for tech in TECH_KEYWORDS)
-        for col in ['question', 'topic', 'tags']
-    )
-
-def update_tfidf_model(dfQuestion):
-    global vectorizer, tfidf_matrix
-    dfQuestion.fillna('', inplace=True)
-    dfQuestion['combined'] = dfQuestion[['topic', 'tags', 'question']].agg(' '.join, axis=1)
-    vectorizer = TfidfVectorizer()
-    tfidf_matrix = vectorizer.fit_transform(dfQuestion['combined'])
 
 
 def update_collab_model(dfInteractions):
@@ -66,9 +45,9 @@ def update_collab_model(dfInteractions):
         values='weighted_score',
         aggfunc='mean'
     ).fillna(0)
-
+    #Singular Value Decomposition
     interaction_np = interaction_matrix.values
-    U, sigma, Vt = svds(interaction_np, k=5)
+    U, sigma, Vt = svds(interaction_np, k=5) 
     sigma = np.diag(sigma)
     predicted = np.dot(np.dot(U, sigma), Vt)
     predicted_df = pd.DataFrame(predicted, index=interaction_matrix.index, columns=interaction_matrix.columns)
@@ -88,19 +67,6 @@ def recommend_questions_collab(user_id, dfInteractions, n=5):
     return [qid for qid in ranked.index if qid not in answered][:n]
 
 
-def recommend_questions_content(user_id, dfUsers, dfQuestion, dfInteractions, n=5):
-    user = dfUsers[dfUsers['user_id'] == user_id]
-    if user.empty:
-        return []
-    answered = get_answered_questions(dfInteractions, user_id)
-    prefs = ' '.join(user['familiar_technologies'].astype(str).tolist())
-    user_vec = vectorizer.transform([prefs])
-    scores = cosine_similarity(user_vec, tfidf_matrix).flatten()
-    top_idx = scores.argsort()[::-1]
-    recs = [int(dfQuestion.iloc[i]['question_id']) for i in top_idx if dfQuestion.iloc[i]['question_id'] not in answered]
-    return recs[:n]
-
-
 class QuestionBanditRecommender:
     def __init__(self, dfQuestion, dfUsers, dfInteractions):
         self.qdf = dfQuestion
@@ -115,7 +81,8 @@ class QuestionBanditRecommender:
                 t = row['time_taken']
                 self.successes[qid] += 1 if t <= 10 else 0.8 if t <= 20 else 0.5
 
-    def ucb_score(self, qid, total):
+    # Upper Confidence Bound
+    def ucb_score(self, qid, total): 
         mean = self.successes[qid] / self.attempts[qid]
         return mean + np.sqrt((2 * np.log(total)) / self.attempts[qid])
 
@@ -146,17 +113,14 @@ class QuestionBanditRecommender:
         return self.qdf[self.qdf['question_id'].isin(top)]
 
 
-def recommend_questions_job_title_only(dfQuestion, dfInteractions, user_id, job_keywords, n=20):
+def recommend_questions_job_title(dfQuestion, dfInteractions, user_id, job_keywords, n=20):
     answered = get_answered_questions(dfInteractions, user_id)
 
     def count_keyword_matches(text):
         text = str(text).lower()
         return sum(1 for keyword in job_keywords if keyword in text)
 
-    # Filter unanswered questions
     job_related = dfQuestion[~dfQuestion['question_id'].isin(answered)].copy()
-
-    # Compute keyword match score
     job_related['match_score'] = job_related.apply(
         lambda row: (
             count_keyword_matches(row['question']) +
@@ -165,7 +129,6 @@ def recommend_questions_job_title_only(dfQuestion, dfInteractions, user_id, job_
         ),
         axis=1
     )
-
     job_related = job_related[job_related['match_score'] > 0]
     job_related = job_related.sort_values(by='match_score', ascending=False)
 
@@ -196,26 +159,26 @@ def hybrid_recommendations(user_id, num_questions=5, alpha=0.35, beta=0.25, gamm
 
     # Update models
     update_collab_model(dfInteractions)
-    update_tfidf_model(dfQuestion)
+    # update_tfidf_model(dfQuestion)
     recommender = QuestionBanditRecommender(dfQuestion, dfUsers, dfInteractions)
 
     # Get recommendations
     collab = recommend_questions_collab(user_id, dfInteractions, num_questions * 2)
-    content = recommend_questions_content(user_id, dfUsers, dfQuestion, dfInteractions, num_questions * 2)
+    graphBased=recommend_questions_by_user(user_id)
     bandit_df = recommender.recommend(user_id, top_n=num_questions * 2)
     bandit = bandit_df['question_id'].tolist()
-    job_title_based = recommend_questions_job_title_only(dfQuestion, dfInteractions, user_id, job_keywords, num_questions * 3)
+    job_title_based = recommend_questions_job_title(dfQuestion, dfInteractions, user_id, job_keywords, num_questions * 3)
 
      # TEST
     print("Collaborative Filtering (CF):", collab)
-    print("Content-Based Filtering (CBF):", content)
+    print("Graph Based Filtering (CF):", graphBased)
     print("Bandit Recommendations:", bandit)
     print("Trending Job Title Matched:", job_title_based)
 
     score_dict = {}
     for i, qid in enumerate(collab):
         score_dict[qid] = score_dict.get(qid, 0) + alpha * (1 / (i + 1))
-    for i, qid in enumerate(content):
+    for i, qid in enumerate(graphBased):
         score_dict[qid] = score_dict.get(qid, 0) + beta * (1 / (i + 1))
     for i, qid in enumerate(bandit):
         score_dict[qid] = score_dict.get(qid, 0) + gamma * (1 / (i + 1))
@@ -229,5 +192,3 @@ def hybrid_recommendations(user_id, num_questions=5, alpha=0.35, beta=0.25, gamm
 
     print("Final Hybrid Recommendation:", top_qids)
     return dfQuestion[dfQuestion['question_id'].isin(top_qids)]
-
-
