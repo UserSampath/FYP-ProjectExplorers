@@ -22,6 +22,13 @@ python -m src.components.questionRecommendation.run
 python -m src.lib.assessmentTableRunner
 python src\components\languageProficiency\languageProficiency.py
 python -m src\components\questionRecommendation\run.py
+python src\components\audioEmotion\audioEmotion.py
+python  src.pipeline.languageProficiency.text
+
+python src.pipeline.languageProficiency.text
+
+
+python src\pipeline\audioEmotion\audioEmotion.py
 
 git clone https://github.com/tyiannak/pyAudioAnalysis.git
 cd pyAudioAnalysis
@@ -29,8 +36,8 @@ pip install -r requirements.txt
 python setup.py install
 
 conda activate
-uvicorn main:app --reload
-python -m src.lib.assessmentTableRunner
+
+uvicorn main:app --reloadpython -m src.lib.assessmentTableRunner
 python -m src.lib.languageProficiencyAssessmentTableRunner 
 python -m src.lib.videoInterviewAssessmentTableRunner
 python -m src.lib.suggestionTableRunner

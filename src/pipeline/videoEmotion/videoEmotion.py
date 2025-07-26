@@ -61,7 +61,7 @@ emotion_confidence_map = {
 }
 
 # --- Main Analyzer ---
-def analyze_video(video_path,assessment_id):
+def analyze_video(video_path,assessment_id,audio_emotion):
     cap = cv2.VideoCapture(video_path)
     detected_emotions = []
     frame_count = 0
@@ -105,6 +105,7 @@ def analyze_video(video_path,assessment_id):
         label = "Low Confidence"
 
     emotion_counts = Counter(detected_emotions)
+    print("audio_emotion",audio_emotion)
     update_assessment(
             assessment_id=assessment_id,
             average_confidence=emotion_avg_conf,
@@ -112,7 +113,8 @@ def analyze_video(video_path,assessment_id):
             final_confidence=final_conf,
             penalty_adjusted_confidence=adjusted_conf,
             confidence_label=label,
-             emotion_counts=emotion_counts
+            audio_emotion=audio_emotion,
+            emotion_counts=emotion_counts
         )
 
     return {

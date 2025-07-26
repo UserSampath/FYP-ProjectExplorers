@@ -30,14 +30,26 @@ def load_data():
 
     return dfQuestion, dfUsers, dfInteractions,dfJobPostTitles
 
+def compute_weighted_score(row):
+    if row['answered_correctly'] == 1:
+        score = 1.0  
+
+        if row['difficulty_encoded'] == 3:
+            score += 0.4
+        elif row['difficulty_encoded'] == 2:
+            score += 0.2
+
+        if row['timeTaken_minmax'] <= 0.4:
+            score += 0.3
+        elif row['timeTaken_minmax'] <= 0.7:
+            score += 0.15
+
+        return score
+    return 0
 
 def update_collab_model(dfInteractions):
     global predicted_df
-    dfInteractions['weighted_score'] = (
-        dfInteractions['answered_correctly'] +
-        dfInteractions['timeTaken_minmax'] +
-        dfInteractions['difficulty_encoded']
-    ) / 3
+    dfInteractions['weighted_score'] = dfInteractions.apply(compute_weighted_score, axis=1)
 
     interaction_matrix = dfInteractions.pivot_table(
         index='user_id',

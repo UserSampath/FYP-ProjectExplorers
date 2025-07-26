@@ -176,3 +176,6 @@ cython_debug/
 artifact/languageProficiency
 
 pyAudioAnalysis/
+ravdess/
+label_encoder.pkl
+xgb_emotion_model.pkl

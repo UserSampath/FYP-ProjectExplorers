@@ -119,7 +119,8 @@ def update_assessment(
     final_confidence: float,
     penalty_adjusted_confidence: float,
     confidence_label: str,
-    emotion_counts: dict = None
+    audio_emotion:str,
+    emotion_counts: dict = None,
 ) -> dict:
     try:
         engine = get_engine()
@@ -137,6 +138,7 @@ def update_assessment(
             "final_confidence": final_confidence,
             "penalty_adjusted_confidence": penalty_adjusted_confidence,
             "confidence_label": confidence_label,
+            "audio_emotion":audio_emotion
         }
 
         # Add emotion counts if provided
