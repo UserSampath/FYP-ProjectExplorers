@@ -19,5 +19,5 @@ bcrypt
 python-dotenv
 deepface
 python-jose[cryptography]
-#-e .
+-e .
 

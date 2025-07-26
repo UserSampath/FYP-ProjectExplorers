@@ -67,15 +67,20 @@ def load_object(file_path):
 
 
 
+# from sqlalchemy import create_engine
+import urllib.parse
+
 def get_engine():
     user = 'root'
-    password = '205011D'
+    raw_password = 'Hvss@20fit'
+    password = urllib.parse.quote_plus(raw_password)  # URL-encode the password
     host = 'localhost'
     port = '3306'
     database = 'exploresDb'
     
     engine = create_engine(f'mysql+mysqlconnector://{user}:{password}@{host}:{port}/{database}')
     return engine
+
 
 
 from sqlalchemy import create_engine, text  # Add `text` here
